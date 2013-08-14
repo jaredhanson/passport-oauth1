@@ -25,7 +25,7 @@ I will update the list.
 
 ## Related Modules
 
-- [passport-http-oauth](https://github.com/jaredhanson/passport-oauth2) — OAuth 2.0 authentication strategy
+- [passport-oauth2](https://github.com/jaredhanson/passport-oauth2) — OAuth 2.0 authentication strategy
 - [passport-http-oauth](https://github.com/jaredhanson/passport-http-oauth) — OAuth authentication strategy for APIs
 - [OAuthorize](https://github.com/jaredhanson/oauthorize) — OAuth service provider toolkit
 
