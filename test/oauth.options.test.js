@@ -163,12 +163,14 @@ describe('OAuthStrategy', function() {
     strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
       if (extraParams.oauth_callback == 'https://www.example.net/auth/example/cb') {
         callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      } else if (extraParams.oauth_callback == 'http://www.example.net/auth/example/cb') {
+        callback(null, 'hh5s93j4hdidpola-insecure', 'hdhd0244k9j7ao03-insecure', {});
       } else {
         callback(new Error('wrong request token params'));
       }
     }
     
-    describe('handling a request to be redirected for authorization', function() {
+    describe('handling a request on secure connection to be redirected for authorization', function() {
       var request
         , url;
 
@@ -196,6 +198,195 @@ describe('OAuthStrategy', function() {
         expect(request.session['oauth']).to.not.be.undefined;
         expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
         expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    });
+    
+    describe('handling a request on insecure connection to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.url = '/auth/example'
+            req.headers.host = 'www.example.net';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola-insecure');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola-insecure');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03-insecure');
+      });
+    });
+    
+    describe('handling a request from behind a secure proxy that is trusted by app to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            
+            req.app = {
+              get: function(name) {
+                return name == 'trust proxy' ? true : false;
+              }
+            }
+            
+            req.url = '/auth/example'
+            req.headers.host = 'www.example.net';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    });
+    
+    describe('handling a request from behind a secure proxy that sets x-forwarded-host that is trusted by app to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            
+            req.app = {
+              get: function(name) {
+                return name == 'trust proxy' ? true : false;
+              }
+            }
+            
+            req.url = '/auth/example'
+            req.headers.host = 'server.internal';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.headers['x-forwarded-host'] = 'www.example.net';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    });
+    
+    describe('handling a request that contains untrusted x-forwarded-proto header to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            
+            req.app = {
+              get: function(name) {
+                return name == 'trust proxy' ? false : false;
+              }
+            }
+            
+            req.url = '/auth/example'
+            req.headers.host = 'www.example.net';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola-insecure');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola-insecure');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03-insecure');
+      });
+    });
+    
+    describe('handling a request that contains untrusted x-forwarded-host header to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            
+            req.app = {
+              get: function(name) {
+                return name == 'trust proxy' ? false : false;
+              }
+            }
+            
+            req.url = '/auth/example'
+            req.headers.host = 'www.example.net';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.headers['x-forwarded-host'] = 'www.example.com';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola-insecure');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola-insecure');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03-insecure');
       });
     });
   });
