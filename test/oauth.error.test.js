@@ -111,12 +111,12 @@ describe('OAuthStrategy', function() {
         consumerKey: 'ABC123',
         consumerSecret: 'secret'
       }, function(token, tokenSecret, profile, done) {
-        return done({ statusCode: 500, data: 'Something went wrong' });
+        return done(new Error('something went wrong'));
       });
     
     // inject a "mock" oauth instance
     strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
-      callback(new Error('error obtaining request token'));
+      callback({ statusCode: 500, data: 'Something went wrong' });
     }
     
     describe('handling a request to be redirected', function() {
@@ -139,7 +139,8 @@ describe('OAuthStrategy', function() {
       it('should error', function() {
         expect(err).to.be.an.instanceof(InternalOAuthError);
         expect(err.message).to.equal('Failed to obtain request token');
-        expect(err.oauthError.message).to.equal('error obtaining request token');
+        expect(err.oauthError.statusCode).to.equal(500);
+        expect(err.oauthError.data).to.equal('Something went wrong');
       });
       
       it('should not store token and token secret in session', function() {
