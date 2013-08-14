@@ -391,6 +391,107 @@ describe('OAuthStrategy', function() {
     });
   });
   
+  describe('with relative callback URL and trust proxy option', function() {
+    var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret',
+        callbackURL: '/auth/example/cb',
+        proxy: true
+      }, function(token, tokenSecret, profile, done) {
+        if (token == 'nnch734d00sl2jdk' && tokenSecret == 'pfkkdhi9sl3r4s00') {
+          return done(null, { id: '1234', profile: profile }, { message: 'Hello' });
+        }
+        return done(null, false);
+      });
+    
+    // inject a "mock" oauth instance
+    strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+      if (token == 'hh5s93j4hdidpola' && tokenSecret == 'hdhd0244k9j7ao03' && verifier == 'hfdp7dh39dks9884') {
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      } else {
+        return callback(null, 'wrong-token', 'wrong-token-secret');
+      }
+    }
+    
+    strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+      if (extraParams.oauth_callback == 'https://www.example.net/auth/example/cb') {
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      } else if (extraParams.oauth_callback == 'http://www.example.net/auth/example/cb') {
+        callback(null, 'hh5s93j4hdidpola-insecure', 'hdhd0244k9j7ao03-insecure', {});
+      } else {
+        callback(new Error('wrong request token params'));
+      }
+    }
+    
+    describe('handling a request from behind a proxy to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.url = '/auth/example'
+            req.headers.host = 'www.example.net';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    });
+    
+    describe('handling a request from behind a proxy that sets x-forwarded-host to be redirected for authorization', function() {
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.url = '/auth/example'
+            req.headers.host = 'server.internal';
+            req.headers['x-forwarded-proto'] = 'https';
+            req.headers['x-forwarded-host'] = 'www.example.net';
+            req.session = {};
+            req.connection = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    });
+  });
+  
   describe('with user authorization URL that contains query parameters', function() {
     var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
