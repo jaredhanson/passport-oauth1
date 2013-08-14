@@ -99,4 +99,10 @@ describe('OAuthStrategy', function() {
     }).to.not.throw();
   });
   
+  it('should throw if constructed with only a verify callback', function() {
+    expect(function() {
+      new OAuthStrategy(function() {});
+    }).to.throw(TypeError, 'OAuthStrategy requires a requestTokenURL option');
+  });
+  
 });
