@@ -20,8 +20,51 @@ providers.
 
 Developers who need to implement authentication against an OAuth provider that
 is not already supported are encouraged to sub-class this strategy.  If you
-choose to open source the new provider-specific strategy, send me a message and
-I will update the list.
+choose to open source the new provider-specific strategy, please add it to the
+list so other people can find it.
+
+## Usage
+
+#### Configure Strategy
+
+The OAuth authentication strategy authenticates users using a third-party
+account and OAuth tokens.  The provider's OAuth endpoints, as well as the
+consumer key and secret, are specified as options.  The strategy requires a
+`verify` callback, which receives a token and profile, and calls `done`
+providing a user.
+
+    passport.use(new OAuth2Strategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: EXAMPLE_CONSUMER_KEY,
+        consumerSecret: EXAMPLE_CONSUMER_SECRET,
+        callbackURL: "http://127.0.0.1:3000/auth/example/callback"
+      },
+      function(token, tokenSecret, profile, done) {
+        User.findOrCreate({ exampleId: profile.id }, function (err, user) {
+          return done(err, user);
+        });
+      }
+    ));
+
+#### Authenticate Requests
+
+Use `passport.authenticate()`, specifying the `'oauth'` strategy, to
+authenticate requests.
+
+For example, as route middleware in an [Express](http://expressjs.com/)
+application:
+
+    app.get('/auth/example',
+      passport.authenticate('oauth'));
+    
+    app.get('/auth/example/callback', 
+      passport.authenticate('oauth', { failureRedirect: '/login' }),
+      function(req, res) {
+        // Successful authentication, redirect home.
+        res.redirect('/');
+      });
 
 ## Related Modules
 
