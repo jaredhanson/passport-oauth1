@@ -157,4 +157,46 @@ describe('OAuthStrategy', function() {
     });
   });
   
+  describe('used within an app that does not have session support', function() {
+    var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(null, { id: '1234' }, { message: 'Hello' });
+      });
+    
+    // inject a "mock" oauth instance
+    strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+      return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+    }
+    
+    describe('handling an authorized callback request', function() {
+      var request
+        , info;
+
+      before(function(done) {
+        chai.passport(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('OAuthStrategy requires session support. Did you forget app.use(express.session(...))?');
+      });
+    });
+  });
+  
 });
