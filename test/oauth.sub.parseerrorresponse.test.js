@@ -46,7 +46,7 @@ describe('OAuthStrategy', function() {
         return callback({ statusCode: 500, data: 'Invalid client key' });
       }
     
-      describe('handling a request to be redirected with params', function() {
+      describe('handling a request to be redirected', function() {
         var request, err;
 
         before(function(done) {
@@ -59,7 +59,7 @@ describe('OAuthStrategy', function() {
               request = req;
               req.session = {};
             })
-            .authenticate({ scope: 'foo' });
+            .authenticate();
         });
 
         it('should error', function() {
@@ -94,7 +94,7 @@ describe('OAuthStrategy', function() {
         return callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
       }
     
-      describe('handling a request to be redirected with params', function() {
+      describe('handling an authorized callback request', function() {
         var request, err;
 
         before(function(done) {
@@ -149,7 +149,7 @@ describe('OAuthStrategy', function() {
       return callback({ statusCode: 501, data: 'Invalid client key' });
     }
   
-    describe('handling a request to be redirected with params', function() {
+    describe('handling a request to be redirected', function() {
       var request, err;
 
       before(function(done) {
@@ -162,7 +162,7 @@ describe('OAuthStrategy', function() {
             request = req;
             req.session = {};
           })
-          .authenticate({ scope: 'foo' });
+          .authenticate();
       });
 
       it('should error with generic error', function() {

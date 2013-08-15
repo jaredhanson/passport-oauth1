@@ -23,6 +23,10 @@ is not already supported are encouraged to sub-class this strategy.  If you
 choose to open source the new provider-specific strategy, please add it to the
 list so other people can find it.
 
+## Install
+
+    $ npm install passport-oauth1
+
 ## Usage
 
 #### Configure Strategy
