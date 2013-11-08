@@ -37,7 +37,7 @@ consumer key and secret, are specified as options.  The strategy requires a
 `verify` callback, which receives a token and profile, and calls `done`
 providing a user.
 
-    passport.use(new OAuth2Strategy({
+    passport.use(new OAuth1Strategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
         accessTokenURL: 'https://www.example.com/oauth/access_token',
         userAuthorizationURL: 'https://www.example.com/oauth/authorize',
