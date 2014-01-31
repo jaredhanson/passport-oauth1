@@ -44,7 +44,7 @@ describe('OAuthStrategy', function() {
       , info;
 
     before(function(done) {
-      chai.passport(strategy)
+      chai.passport.use(strategy)
         .success(function(u, i) {
           user = u;
           info = i;
@@ -83,7 +83,7 @@ describe('OAuthStrategy', function() {
       , err;
 
     before(function(done) {
-      chai.passport(strategy)
+      chai.passport.use(strategy)
         .error(function(e) {
           err = e;
           done();
@@ -113,7 +113,7 @@ describe('OAuthStrategy', function() {
       , url;
 
     before(function(done) {
-      chai.passport(strategy)
+      chai.passport.use(strategy)
         .redirect(function(u) {
           url = u;
           done();
@@ -141,7 +141,7 @@ describe('OAuthStrategy', function() {
       , info;
 
     before(function(done) {
-      chai.passport(strategy)
+      chai.passport.use(strategy)
         .fail(function(i) {
           info = i;
           done();

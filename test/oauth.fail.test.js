@@ -29,7 +29,7 @@ describe('OAuthStrategy', function() {
         , info;
 
       before(function(done) {
-        chai.passport(strategy)
+        chai.passport.use(strategy)
           .fail(function(i) {
             info = i;
             done();
