@@ -1,8 +1,11 @@
 # passport-oauth1
 
-[![Build](https://travis-ci.org/jaredhanson/passport-oauth1.png)](http://travis-ci.org/jaredhanson/passport-oauth1)
-[![Coverage](https://coveralls.io/repos/jaredhanson/passport-oauth1/badge.png)](https://coveralls.io/r/jaredhanson/passport-oauth1)
-[![Dependencies](https://david-dm.org/jaredhanson/passport-oauth1.png)](http://david-dm.org/jaredhanson/passport-oauth1)
+[![Build](https://travis-ci.org/jaredhanson/passport-oauth1.svg?branch=master)](https://travis-ci.org/jaredhanson/passport-oauth1)
+[![Coverage](https://coveralls.io/repos/jaredhanson/passport-oauth1/badge.svg?branch=master)](https://coveralls.io/r/jaredhanson/passport-oauth1)
+[![Quality](https://codeclimate.com/github/jaredhanson/passport-oauth1/badges/gpa.svg)](https://codeclimate.com/github/jaredhanson/passport-oauth1)
+[![Dependencies](https://david-dm.org/jaredhanson/passport-oauth1.svg)](https://david-dm.org/jaredhanson/passport-oauth1)
+[![Tips](https://img.shields.io/gratipay/jaredhanson.svg)](https://gratipay.com/jaredhanson/)
+
 
 General-purpose OAuth 1.0 authentication strategy for [Passport](http://passportjs.org/).
 
