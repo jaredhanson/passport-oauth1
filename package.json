@@ -36,8 +36,8 @@
     "utils-merge": "1.x.x"
   },
   "devDependencies": {
-    "mocha": "1.x.x",
-    "chai": "1.x.x",
+    "mocha": "2.x.x",
+    "chai": "2.x.x",
     "chai-passport-strategy": "0.2.x"
   },
   "engines": { "node": ">= 0.4.0" },
