@@ -46,7 +46,8 @@ providing a user.
         userAuthorizationURL: 'https://www.example.com/oauth/authorize',
         consumerKey: EXAMPLE_CONSUMER_KEY,
         consumerSecret: EXAMPLE_CONSUMER_SECRET,
-        callbackURL: "http://127.0.0.1:3000/auth/example/callback"
+        callbackURL: "http://127.0.0.1:3000/auth/example/callback",
+        signatureMethod: "RSA-SHA1"
       },
       function(token, tokenSecret, profile, done) {
         User.findOrCreate({ exampleId: profile.id }, function (err, user) {
