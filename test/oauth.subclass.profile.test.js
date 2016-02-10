@@ -84,6 +84,58 @@ describe('OAuthStrategy subclass', function() {
       });
     }); // fetching user profile
     
+    describe('error fetching user profile', function() {
+      var strategy = new FooOAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('failed to load user profile'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        if (token != 'hh5s93j4hdidpola') { return callback(new Error('incorrect token argument')); }
+        if (tokenSecret != 'hdhd0244k9j7ao03') { return callback(new Error('incorrect tokenSecret argument')); }
+        if (verifier != 'hfdp7dh39dks9884') { return callback(new Error('incorrect verifier argument')); }
+        
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      }
+    
+    
+      var request
+        , err
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error)
+        expect(err.message).to.equal('failed to load user profile');
+      });
+  
+      it('should remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // error fetching user profile
+    
     describe('skipping user profile due to skipUserProfile option set to true', function() {
       var strategy = new FooOAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
