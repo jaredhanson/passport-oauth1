@@ -251,7 +251,7 @@ describe('OAuthStrategy', function() {
         if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
         if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/callback') { return callback(new Error('incorrect oauth_callback argument')); }
     
-        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
       }
     
     
@@ -282,6 +282,51 @@ describe('OAuthStrategy', function() {
       });
     }); // that redirects to service provider with absolute callback URL
     
+    describe('that redirects to service provider with absolute callback URL that is not confirmed', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret',
+        callbackURL: 'https://www.example.net/auth/example/callback'
+      }, function() {});
+    
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
+        if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/callback') { return callback(new Error('incorrect oauth_callback argument')); }
+    
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      }
+    
+    
+      var request
+        , url;
+  
+      before(function(done) {
+        chai.passport.use(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.session = {};
+          })
+          .authenticate();
+      });
+  
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola&oauth_callback=https%3A%2F%2Fwww.example.net%2Fauth%2Fexample%2Fcallback');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    }); // that redirects to service provider with absolute callback URL that is not confirmed
+    
     describe('that redirects to service provider with relative callback URL', function() {
       var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
@@ -296,7 +341,7 @@ describe('OAuthStrategy', function() {
         if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
         if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
       }
     
     
@@ -344,7 +389,7 @@ describe('OAuthStrategy', function() {
         if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
         if (extraParams.oauth_callback !== 'http://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
       }
     
     
@@ -392,7 +437,7 @@ describe('OAuthStrategy', function() {
         if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
         if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/callback/alt1') { return callback(new Error('incorrect oauth_callback argument')); }
     
-        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
       }
     
     
@@ -437,7 +482,7 @@ describe('OAuthStrategy', function() {
         if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
         if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/callback/alt2') { return callback(new Error('incorrect oauth_callback argument')); }
     
-        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
       }
     
     
@@ -574,7 +619,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
@@ -629,7 +674,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
@@ -684,7 +729,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'http://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
@@ -739,7 +784,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'http://server.internal/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
@@ -796,7 +841,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
@@ -846,7 +891,7 @@ describe('OAuthStrategy', function() {
           if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
           if (extraParams.oauth_callback !== 'https://www.example.net/auth/example/cb') { return callback(new Error('incorrect oauth_callback argument')); }
     
-          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+          callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', { oauth_callback_confirmed: 'true' });
         }
     
     
