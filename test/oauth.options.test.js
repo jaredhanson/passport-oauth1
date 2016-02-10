@@ -434,6 +434,7 @@ describe('OAuthStrategy', function() {
       }
     }
     
+    // OK
     describe('handling a request from behind a proxy to be redirected for authorization', function() {
       var request
         , url;
@@ -466,6 +467,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request from behind a proxy that sets x-forwarded-host to be redirected for authorization', function() {
       var request
         , url;
