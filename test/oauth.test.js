@@ -1,4 +1,5 @@
 var OAuthStrategy = require('../lib/strategy')
+  , InternalOAuthError = require('../lib/errors/internaloautherror')
   , chai = require('chai');
 
 
@@ -172,6 +173,49 @@ describe('OAuthStrategy', function() {
       });
     }); // that redirects to service provider
     
+    describe('that errors due to request token request error', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        callback(new Error('error obtaining request token'));
+      }
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.session = {};
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(InternalOAuthError);
+        expect(err.message).to.equal('Failed to obtain request token');
+        expect(err.oauthError.message).to.equal('error obtaining request token');
+      });
+      
+      it('should not store token and token secret in session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that errors due to request token request error
+    
   });
   
   describe('processing response to authorization request', function() {
@@ -331,6 +375,57 @@ describe('OAuthStrategy', function() {
         expect(request.session['oauth']).to.be.undefined;
       });
     }); // that errors due to request token not being found in session
+    
+    describe('that errors due to access token request error', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        callback(new Error('error obtaining access token'));
+      }
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(InternalOAuthError);
+        expect(err.message).to.equal('Failed to obtain access token');
+        expect(err.oauthError.message).to.equal('error obtaining access token');
+      });
+      
+      it('should not remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    }); // that errors due to access token request error
     
   }); // processing response to authorization request
   
