@@ -35,4 +35,12 @@ describe('InternalOAuthError', function() {
     });
   });
   
+  describe('constructed with a message and object without status code and data', function() {
+    var err = new InternalOAuthError('oops', { something: 'went wrong' });
+    
+    it('should format correctly', function() {
+      expect(err.toString()).to.equal('InternalOAuthError: oops');
+    });
+  });
+  
 });
