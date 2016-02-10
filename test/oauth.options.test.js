@@ -48,6 +48,7 @@ describe('OAuthStrategy', function() {
       }
     }
     
+    // OK
     describe('handling a request to be redirected', function() {
       var request
         , url;
@@ -76,6 +77,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request to be redirected with callback URL option override', function() {
       var request
         , url;
@@ -104,6 +106,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request to be redirected with relative callback URL option override', function() {
       var request
         , url;
@@ -170,6 +173,7 @@ describe('OAuthStrategy', function() {
       }
     }
     
+    // OK
     describe('handling a request on secure connection to be redirected for authorization', function() {
       var request
         , url;
