@@ -441,6 +441,54 @@ describe('OAuthStrategy', function() {
       });
     }); // that fails due to verify callback supplying false
     
+    describe('that fails due to verify callback supplying false with additional info', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(null, false, { message: 'Invite required' });
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      };
+    
+    
+      var request
+        , info;
+  
+      before(function(done) {
+        chai.passport.use(strategy)
+          .fail(function(i) {
+            info = i;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+  
+      it('should supply info', function() {
+        expect(info).to.be.an.object;
+        expect(info.message).to.equal('Invite required');
+      });
+    
+      it('should remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that fails due to verify callback supplying false with additional info
+    
     describe('that errors due to lack of session support in app', function() {
       var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
