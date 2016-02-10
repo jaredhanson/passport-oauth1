@@ -205,6 +205,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request on insecure connection to be redirected for authorization', function() {
       var request
         , url;
