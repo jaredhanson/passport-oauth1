@@ -12,6 +12,8 @@ describe('OAuthStrategy subclass', function() {
     util.inherits(FooOAuthStrategy, OAuthStrategy);
 
     FooOAuthStrategy.prototype.userProfile = function(token, tokenSecret, params, done) {
+      if (token === '666') { return done(new Error('something went wrong loading user profile')); }
+      
       if (token != 'nnch734d00sl2jdk') { return done(new Error('incorrect token argument')); }
       if (tokenSecret != 'pfkkdhi9sl3r4s00') { return done(new Error('incorrect tokenSecret argument')); }
       
@@ -92,7 +94,7 @@ describe('OAuthStrategy subclass', function() {
         consumerKey: 'ABC123',
         consumerSecret: 'secret'
       }, function(token, tokenSecret, profile, done) {
-        return done(new Error('failed to load user profile'));
+        return done(new Error('verify callback should not be called'));
       });
     
       strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
@@ -100,7 +102,7 @@ describe('OAuthStrategy subclass', function() {
         if (tokenSecret != 'hdhd0244k9j7ao03') { return callback(new Error('incorrect tokenSecret argument')); }
         if (verifier != 'hfdp7dh39dks9884') { return callback(new Error('incorrect verifier argument')); }
         
-        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        return callback(null, '666', 'pfkkdhi9sl3r4s00', {});
       }
     
     
@@ -128,7 +130,7 @@ describe('OAuthStrategy subclass', function() {
 
       it('should error', function() {
         expect(err).to.be.an.instanceof(Error)
-        expect(err.message).to.equal('failed to load user profile');
+        expect(err.message).to.equal('something went wrong loading user profile');
       });
   
       it('should remove token and token secret from session', function() {
