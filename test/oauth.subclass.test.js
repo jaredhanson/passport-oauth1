@@ -5,7 +5,65 @@ var OAuthStrategy = require('../lib/strategy')
 
 
 describe('OAuthStrategy subclass', function() {
+  
+  describe('that overrides requestTokenParams', function() {
+    function FooOAuthStrategy(options, verify) {
+      OAuthStrategy.call(this, options, verify);
+    }
+    util.inherits(FooOAuthStrategy, OAuthStrategy);
+
+    FooOAuthStrategy.prototype.requestTokenParams = function(options) {
+      return { scope: options.scope };
+    }
     
+    
+    describe('issuing authorization request that redirects to service provider', function() {
+      var strategy = new FooOAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function() {});
+        
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        if (Object.keys(extraParams).length !== 2) { return callback(new Error('incorrect extraParams argument')); }
+        if (extraParams.oauth_callback !== undefined) { return callback(new Error('incorrect oauth_callback argument')); }
+        if (extraParams.scope !== 'foo') { return callback(new Error('incorrect scope argument')); }
+        
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      }
+    
+      var request
+        , url;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.session = {};
+          })
+          .authenticate({ scope: 'foo' });
+      });
+
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?oauth_token=hh5s93j4hdidpola');
+      });
+  
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    }); // issuing authorization request that redirects to service provider
+  
+  }); // that overrides requestTokenParams
+  
+  
   describe('that overrides parseErrorResponse', function() {
     function FooOAuthStrategy(options, verify) {
       OAuthStrategy.call(this, options, verify);
@@ -63,14 +121,14 @@ describe('OAuthStrategy subclass', function() {
     
     describe('processing response to authorization request that errors due to access token request error', function() {
       var strategy = new FooOAuthStrategy({
-          requestTokenURL: 'https://www.example.com/oauth/request_token',
-          accessTokenURL: 'https://www.example.com/oauth/access_token',
-          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
-          consumerKey: 'ABC123',
-          consumerSecret: 'secret'
-        }, function(token, tokenSecret, profile, done) {
-          return done(new Error('verify callback should not be called'));
-        });
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
     
       strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
         return callback({ statusCode: 500, data: 'Invalid request token' });
