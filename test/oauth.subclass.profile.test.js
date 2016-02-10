@@ -403,9 +403,9 @@ describe('OAuthStrategy subclass', function() {
       it('should remove token and token secret from session', function() {
         expect(request.session['oauth']).to.be.undefined;
       });
-    }); // not skipping user profile due to skipUserProfile returning false
+    }); // not skipping user profile due to skipUserProfile asynchronously returning false
     
-    describe('skipping user profile due to skipUserProfile returning true', function() {
+    describe('skipping user profile due to skipUserProfile asynchronously returning true', function() {
       var strategy = new FooOAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
         accessTokenURL: 'https://www.example.com/oauth/access_token',
@@ -472,7 +472,69 @@ describe('OAuthStrategy subclass', function() {
       it('should remove token and token secret from session', function() {
         expect(request.session['oauth']).to.be.undefined;
       });
-    }); // skipping user profile due to skipUserProfile returning true
+    }); // skipping user profile due to skipUserProfile asynchronously returning true
+    
+    describe('error due to skipUserProfile asynchronously returning error', function() {
+      var strategy = new FooOAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret',
+        skipUserProfile: function(token, tokenSecret, done) {
+          if (token != 'nnch734d00sl2jdk') { return done(new Error('incorrect token argument')); }
+          if (tokenSecret != 'pfkkdhi9sl3r4s00') { return done(new Error('incorrect tokenSecret argument')); }
+          
+          return done(new Error('something went wrong'));
+        }
+      }, function(token, tokenSecret, profile, done) {
+        if (token != 'nnch734d00sl2jdk') { return done(new Error('incorrect token argument')); }
+        if (tokenSecret != 'pfkkdhi9sl3r4s00') { return done(new Error('incorrect tokenSecret argument')); }
+        if (profile !== undefined) { return done(new Error('incorrect profile argument')); }
+        
+        return done(null, { id: '1234' }, { message: 'Hello' });
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        if (token != 'hh5s93j4hdidpola') { return callback(new Error('incorrect token argument')); }
+        if (tokenSecret != 'hdhd0244k9j7ao03') { return callback(new Error('incorrect tokenSecret argument')); }
+        if (verifier != 'hfdp7dh39dks9884') { return callback(new Error('incorrect verifier argument')); }
+        
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      }
+    
+    
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error)
+        expect(err.message).to.equal('something went wrong');
+      });
+  
+      it('should remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // error due to skipUserProfile asynchronously returning error
     
   }); // that overrides userProfile
   
