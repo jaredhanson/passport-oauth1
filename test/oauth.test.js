@@ -603,6 +603,44 @@ describe('OAuthStrategy', function() {
       });
     }); // that errors due to request token request error
     
+    describe('that errors due to lack of session support in app', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function() {});
+    
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
+        if (extraParams.oauth_callback !== undefined) { return callback(new Error('incorrect oauth_callback argument')); }
+    
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      }
+    
+    
+      var request
+        , err;
+  
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+          })
+          .authenticate();
+      });
+  
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('OAuthStrategy requires session support. Did you forget app.use(express.session(...))?');
+      });
+    }); // that errors due to lack of session support in app
+    
     describe('from behind a secure proxy', function() {
       
       describe('that is trusted by app and sets x-forwarded-proto', function() {
