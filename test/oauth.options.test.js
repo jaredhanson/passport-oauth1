@@ -502,6 +502,7 @@ describe('OAuthStrategy', function() {
     });
   });
   
+  // OK
   describe('with user authorization URL that contains query parameters', function() {
     var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
@@ -560,6 +561,7 @@ describe('OAuthStrategy', function() {
     });
   });
   
+  // OK
   describe('with custom headers option', function() {
     var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',

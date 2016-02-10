@@ -24,6 +24,26 @@ describe('OAuthStrategy', function() {
     });
   }); // constructed
   
+  describe('constructed with custom headers', function() {
+    var strategy = new OAuthStrategy({
+      requestTokenURL: 'https://www.example.com/oauth/request_token',
+      accessTokenURL: 'https://www.example.com/oauth/access_token',
+      userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+      consumerKey: 'ABC123',
+      consumerSecret: 'secret',
+      customHeaders: { 'X-FOO': 'bar' }
+    }, function() {});
+    
+    it('should be named oauth', function() {
+      expect(strategy.name).to.equal('oauth');
+    });
+  
+    it('should have user agent header set by underlying oauth module', function() {
+      expect(Object.keys(strategy._oauth._headers)).to.have.length(1);
+      expect(strategy._oauth._headers['X-FOO']).to.equal('bar');
+    });
+  }); // constructed with custom headers
+  
   describe('constructed without a verify callback', function() {
     it('should throw', function() {
       expect(function() {
@@ -172,6 +192,50 @@ describe('OAuthStrategy', function() {
         expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
       });
     }); // that redirects to service provider
+    
+    describe('that redirects to service provider whose user authorization URL contains query parameters', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize?foo=bar',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function() {});
+    
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        if (Object.keys(extraParams).length !== 1) { return callback(new Error('incorrect extraParams argument')); }
+        if (extraParams.oauth_callback !== undefined) { return callback(new Error('incorrect oauth_callback argument')); }
+    
+        callback(null, 'hh5s93j4hdidpola', 'hdhd0244k9j7ao03', {});
+      }
+    
+    
+      var request
+        , url;
+  
+      before(function(done) {
+        chai.passport.use(strategy)
+          .redirect(function(u) {
+            url = u;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.session = {};
+          })
+          .authenticate();
+      });
+  
+      it('should be redirected', function() {
+        expect(url).to.equal('https://www.example.com/oauth/authorize?foo=bar&oauth_token=hh5s93j4hdidpola');
+      });
+    
+      it('should store token and token secret in session', function() {
+        expect(request.session['oauth']).to.not.be.undefined;
+        expect(request.session['oauth']['oauth_token']).to.equal('hh5s93j4hdidpola');
+        expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
+      });
+    }); // that redirects to service provider whose user authorization URL contains query parameters
     
     describe('that redirects to service provider with absolute callback URL', function() {
       var strategy = new OAuthStrategy({
