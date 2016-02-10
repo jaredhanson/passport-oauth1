@@ -216,7 +216,52 @@ describe('OAuthStrategy', function() {
       });
     }); // that errors due to request token request error
     
-  });
+    describe('that errors due to request token request error, in node-oauth object literal form', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthRequestToken = function(extraParams, callback) {
+        callback({ statusCode: 500, data: 'Something went wrong' });
+      }
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.session = {};
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(InternalOAuthError);
+        expect(err.message).to.equal('Failed to obtain request token');
+        expect(err.oauthError.statusCode).to.equal(500);
+        expect(err.oauthError.data).to.equal('Something went wrong');
+      });
+      
+      it('should not store token and token secret in session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that errors due to request token request error
+    
+  }); // issuing authorization request
+  
   
   describe('processing response to authorization request', function() {
     
@@ -331,6 +376,46 @@ describe('OAuthStrategy', function() {
       });
     }); // that fails due to verify callback supplying false
     
+    describe('that errors due to lack of session support in app', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(new Error('OAuth#getOAuthAccessToken should not be called'));
+      };
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('OAuthStrategy requires session support. Did you forget app.use(express.session(...))?');
+      });
+    }); // that errors due to lack of session support in app
+    
     describe('that errors due to request token not being found in session', function() {
       var strategy = new OAuthStrategy({
         requestTokenURL: 'https://www.example.com/oauth/request_token',
@@ -426,6 +511,102 @@ describe('OAuthStrategy', function() {
         expect(request.session['oauth']['oauth_token_secret']).to.equal('hdhd0244k9j7ao03');
       });
     }); // that errors due to access token request error
+    
+    describe('that errors due to verify callback supplying error', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('something went wrong'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      }
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('something went wrong');
+      });
+      
+      it('should remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that errors due to verify callback supplying error
+    
+    describe('that errors due to verify callback throwing error', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret'
+      }, function(token, tokenSecret, profile, done) {
+        throw new Error('something was thrown');
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+      }
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+            req.session['oauth'] = {};
+            req.session['oauth']['oauth_token'] = 'hh5s93j4hdidpola';
+            req.session['oauth']['oauth_token_secret'] = 'hdhd0244k9j7ao03';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('something was thrown');
+      });
+      
+      it('should remove token and token secret from session', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that errors due to verify callback throwing error
     
   }); // processing response to authorization request
   
