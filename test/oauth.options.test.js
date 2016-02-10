@@ -237,6 +237,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request from behind a secure proxy that is trusted by app to be redirected for authorization', function() {
       var request
         , url;
@@ -276,6 +277,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request from behind a secure proxy that sets x-forwarded-host that is trusted by app to be redirected for authorization', function() {
       var request
         , url;
@@ -355,6 +357,7 @@ describe('OAuthStrategy', function() {
       });
     });
     
+    // OK
     describe('handling a request that contains untrusted x-forwarded-host header to be redirected for authorization', function() {
       var request
         , url;
