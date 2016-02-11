@@ -637,7 +637,7 @@ describe('OAuthStrategy', function() {
   
       it('should error', function() {
         expect(err).to.be.an.instanceof(Error);
-        expect(err.message).to.equal('OAuthStrategy requires session support. Did you forget app.use(express.session(...))?');
+        expect(err.message).to.equal('OAuth authentication requires session support. Did you forget to use express-session middleware?');
       });
     }); // that errors due to lack of session support in app
     
@@ -1365,7 +1365,7 @@ describe('OAuthStrategy', function() {
 
       it('should error', function() {
         expect(err).to.be.an.instanceof(Error);
-        expect(err.message).to.equal('OAuthStrategy requires session support. Did you forget app.use(express.session(...))?');
+        expect(err.message).to.equal('OAuth authentication requires session support. Did you forget to use express-session middleware?');
       });
     }); // that errors due to lack of session support in app
     
