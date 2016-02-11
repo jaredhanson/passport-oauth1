@@ -491,6 +491,130 @@ describe('OAuthStrategy', function() {
   }); // with custom request token store that accepts meta argument and supplies state
   
   
+  describe('with custom request token store that accepts meta argument and does not supply token secret', function() {
+    function CustomStore() {
+    }
+
+    CustomStore.prototype.get = function(req, token, meta, cb) {
+      req.customStoreGetCalled = req.customStoreGetCalled ? req.customStoreGetCalled++ : 1;
+      if (token == 'hh5s93j4hdidpola-and') { return cb(null, false, { message: 'Possible XSRF attack detected.' } ); }
+      return cb(null, false);
+    };
+
+    CustomStore.prototype.set = function(req, token, tokenSecret, meta, cb) {
+      req.customStoreSetCalled = req.customStoreSetCalled ? req.customStoreSetCalled++ : 1;
+      return cb(null);
+    };
+
+    CustomStore.prototype.destroy = function(req, token, meta, cb) {
+      req.customStoreDestroyCalled = req.customStoreDestroyCalled ? req.customStoreDestroyCalled++ : 1;
+      return cb();
+    };
+    
+    
+    describe('processing response to authorization request', function() {
+      
+      describe('that was denied without info', function() {
+        var strategy = new OAuthStrategy({
+          requestTokenURL: 'https://www.example.com/oauth/request_token',
+          accessTokenURL: 'https://www.example.com/oauth/access_token',
+          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+          consumerKey: 'ABC123',
+          consumerSecret: 'secret',
+          requestTokenStore: new CustomStore()
+        }, function(token, tokenSecret, profile, done) {
+          return done(null, { id: '1234' });
+        });
+    
+        strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+          return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        };
+    
+    
+        var request
+          , info;
+  
+        before(function(done) {
+          chai.passport.use(strategy)
+            .fail(function(i) {
+              info = i;
+              done();
+            })
+            .req(function(req) {
+              request = req;
+              req.query = {};
+              req.query['oauth_token'] = 'hh5s93j4hdidpola';
+              req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            })
+            .authenticate();
+        });
+  
+        it('should not supply info', function() {
+          expect(info).to.be.undefined;
+        });
+    
+        it('should load request token from custom store', function() {
+          expect(request.customStoreGetCalled).to.equal(1);
+        });
+        
+        it('should not remove request token from custom store', function() {
+          expect(request.customStoreDestroyCalled).to.be.undefined;
+        });
+      }); // that was denied without info
+      
+      describe('that was denied with info', function() {
+        var strategy = new OAuthStrategy({
+          requestTokenURL: 'https://www.example.com/oauth/request_token',
+          accessTokenURL: 'https://www.example.com/oauth/access_token',
+          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+          consumerKey: 'ABC123',
+          consumerSecret: 'secret',
+          requestTokenStore: new CustomStore()
+        }, function(token, tokenSecret, profile, done) {
+          return done(null, { id: '1234' });
+        });
+    
+        strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+          return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        };
+    
+    
+        var request
+          , info;
+  
+        before(function(done) {
+          chai.passport.use(strategy)
+            .fail(function(i) {
+              info = i;
+              done();
+            })
+            .req(function(req) {
+              request = req;
+              req.query = {};
+              req.query['oauth_token'] = 'hh5s93j4hdidpola-and';
+              req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            })
+            .authenticate();
+        });
+  
+        it('should supply info', function() {
+          expect(info.message).to.equal('Possible XSRF attack detected.');
+        });
+    
+        it('should load request token from custom store', function() {
+          expect(request.customStoreGetCalled).to.equal(1);
+        });
+        
+        it('should not remove request token from custom store', function() {
+          expect(request.customStoreDestroyCalled).to.be.undefined;
+        });
+      }); // that was denied with info
+      
+    });
+    
+  }); // with custom request token store that accepts meta argument and supplies state
+  
+  
   describe('with custom request token store that accepts meta argument and errors on destroy', function() {
     function CustomStore() {
     }
