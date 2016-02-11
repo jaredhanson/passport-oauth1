@@ -10,15 +10,17 @@ describe('OAuthStrategy', function() {
     }
 
     CustomStore.prototype.get = function(req, token, meta, cb) {
-      //return cb(null, info.tokenSecret, state);
+      if (token !== 'hh5s93j4hdidpola') { return callback(new Error('incorrect token argument')); }
+      if (meta.requestTokenURL !== 'https://www.example.com/oauth/request_token') { return callback(new Error('incorrect meta.requestTokenURL argument')); }
+      if (meta.accessTokenURL !== 'https://www.example.com/oauth/access_token') { return callback(new Error('incorrect meta.accessTokenURL argument')); }
+      if (meta.userAuthorizationURL !== 'https://www.example.com/oauth/authorize') { return callback(new Error('incorrect meta.userAuthorizationURL argument')); }
+      if (meta.consumerKey !== 'ABC123') { return callback(new Error('incorrect meta.consumerKey argument')); }
+      
+      req.customStoreGetCalled = req.customStoreGetCalled ? req.customStoreGetCalled++ : 1;
+      return cb(null, 'hdhd0244k9j7ao03');
     };
 
     CustomStore.prototype.set = function(req, token, tokenSecret, meta, cb) {
-      console.log('CustomStore#set');
-      console.log(token);
-      console.log(tokenSecret)
-      console.log(meta)
-      
       if (token === '666') { return cb(new Error('something went wrong storing request token')); }
       if (token === '6666') { throw new Error('something went horribly wrong storing request token'); }
       
@@ -30,12 +32,18 @@ describe('OAuthStrategy', function() {
       if (meta.consumerKey !== 'ABC123') { return callback(new Error('incorrect meta.consumerKey argument')); }
       
       req.customStoreSetCalled = req.customStoreSetCalled ? req.customStoreSetCalled++ : 1;
-      
-      cb(null);
+      return cb(null);
     };
 
     CustomStore.prototype.destroy = function(req, token, meta, cb) {
-      //cb();
+      if (token !== 'hh5s93j4hdidpola') { return callback(new Error('incorrect token argument')); }
+      if (meta.requestTokenURL !== 'https://www.example.com/oauth/request_token') { return callback(new Error('incorrect meta.requestTokenURL argument')); }
+      if (meta.accessTokenURL !== 'https://www.example.com/oauth/access_token') { return callback(new Error('incorrect meta.accessTokenURL argument')); }
+      if (meta.userAuthorizationURL !== 'https://www.example.com/oauth/authorize') { return callback(new Error('incorrect meta.userAuthorizationURL argument')); }
+      if (meta.consumerKey !== 'ABC123') { return callback(new Error('incorrect meta.consumerKey argument')); }
+      
+      req.customStoreDestroyCalled = req.customStoreDestroyCalled ? req.customStoreDestroyCalled++ : 1;
+      return cb();
     };
     
     
@@ -162,6 +170,76 @@ describe('OAuthStrategy', function() {
       }); // that errors due to custom store throwing error
  
     }); // issuing authorization request
+    
+    
+    describe('processing response to authorization request', function() {
+      
+      describe('that was approved', function() {
+        var strategy = new OAuthStrategy({
+          requestTokenURL: 'https://www.example.com/oauth/request_token',
+          accessTokenURL: 'https://www.example.com/oauth/access_token',
+          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+          consumerKey: 'ABC123',
+          consumerSecret: 'secret',
+          requestTokenStore: new CustomStore()
+        }, function(token, tokenSecret, profile, done) {
+          if (token != 'nnch734d00sl2jdk') { return callback(new Error('incorrect token argument')); }
+          if (tokenSecret != 'pfkkdhi9sl3r4s00') { return callback(new Error('incorrect tokenSecret argument')); }
+          if (typeof profile !== 'object') { return done(new Error('incorrect profile argument')); }
+          if (Object.keys(profile).length !== 0) { return done(new Error('incorrect profile argument')); }
+    
+          return done(null, { id: '1234' });
+        });
+    
+        strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+          if (token != 'hh5s93j4hdidpola') { return callback(new Error('incorrect token argument')); }
+          if (tokenSecret != 'hdhd0244k9j7ao03') { return callback(new Error('incorrect tokenSecret argument')); }
+          if (verifier != 'hfdp7dh39dks9884') { return callback(new Error('incorrect verifier argument')); }
+        
+          return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        };
+    
+    
+        var request
+          , user
+          , info;
+  
+        before(function(done) {
+          chai.passport.use(strategy)
+            .success(function(u, i) {
+              user = u;
+              info = i;
+              done();
+            })
+            .req(function(req) {
+              request = req;
+              req.query = {};
+              req.query['oauth_token'] = 'hh5s93j4hdidpola';
+              req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            })
+            .authenticate();
+        });
+  
+        it('should supply user', function() {
+          expect(user).to.be.an.object;
+          expect(user.id).to.equal('1234');
+        });
+
+        it('should supply info with no attributes', function() {
+          expect(info).to.be.an.object;
+          expect(Object.keys(info)).to.have.length(0);
+        });
+    
+        it('should load request token from custom store', function() {
+          expect(request.customStoreGetCalled).to.equal(1);
+        });
+        
+        it('should remove request token from custom store', function() {
+          expect(request.customStoreDestroyCalled).to.equal(1);
+        });
+      }); // that was approved
+      
+    });
     
   }); // with custom request token store that accepts meta argument
   
