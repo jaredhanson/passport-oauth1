@@ -347,6 +347,150 @@ describe('OAuthStrategy', function() {
   }); // with custom request token store that accepts meta argument
   
   
+  describe('with custom request token store that accepts meta argument and supplies state', function() {
+    function CustomStore() {
+    }
+
+    CustomStore.prototype.get = function(req, token, meta, cb) {
+      req.customStoreGetCalled = req.customStoreGetCalled ? req.customStoreGetCalled++ : 1;
+      return cb(null, 'hdhd0244k9j7ao03', { returnTo: 'http://www.example.com/' });
+    };
+
+    CustomStore.prototype.set = function(req, token, tokenSecret, meta, cb) {
+      req.customStoreSetCalled = req.customStoreSetCalled ? req.customStoreSetCalled++ : 1;
+      return cb(null);
+    };
+
+    CustomStore.prototype.destroy = function(req, token, meta, cb) {
+      req.customStoreDestroyCalled = req.customStoreDestroyCalled ? req.customStoreDestroyCalled++ : 1;
+      return cb();
+    };
+    
+    
+    describe('processing response to authorization request', function() {
+      
+      describe('that was approved without info', function() {
+        var strategy = new OAuthStrategy({
+          requestTokenURL: 'https://www.example.com/oauth/request_token',
+          accessTokenURL: 'https://www.example.com/oauth/access_token',
+          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+          consumerKey: 'ABC123',
+          consumerSecret: 'secret',
+          requestTokenStore: new CustomStore()
+        }, function(token, tokenSecret, profile, done) {
+          return done(null, { id: '1234' });
+        });
+    
+        strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+          return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        };
+    
+    
+        var request
+          , user
+          , info;
+  
+        before(function(done) {
+          chai.passport.use(strategy)
+            .success(function(u, i) {
+              user = u;
+              info = i;
+              done();
+            })
+            .req(function(req) {
+              request = req;
+              req.query = {};
+              req.query['oauth_token'] = 'hh5s93j4hdidpola';
+              req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            })
+            .authenticate();
+        });
+  
+        it('should supply user', function() {
+          expect(user).to.be.an.object;
+          expect(user.id).to.equal('1234');
+        });
+
+        it('should supply info with state', function() {
+          expect(info).to.be.an.object;
+          expect(Object.keys(info)).to.have.length(1);
+          expect(info.state).to.be.an.object;
+          expect(info.state.returnTo).to.equal('http://www.example.com/');
+        });
+    
+        it('should load request token from custom store', function() {
+          expect(request.customStoreGetCalled).to.equal(1);
+        });
+        
+        it('should remove request token from custom store', function() {
+          expect(request.customStoreDestroyCalled).to.equal(1);
+        });
+      }); // that was approved without info
+      
+      describe('that was approved with info', function() {
+        var strategy = new OAuthStrategy({
+          requestTokenURL: 'https://www.example.com/oauth/request_token',
+          accessTokenURL: 'https://www.example.com/oauth/access_token',
+          userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+          consumerKey: 'ABC123',
+          consumerSecret: 'secret',
+          requestTokenStore: new CustomStore()
+        }, function(token, tokenSecret, profile, done) {
+          return done(null, { id: '1234' }, { message: 'Hello' });
+        });
+    
+        strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+          return callback(null, 'nnch734d00sl2jdk', 'pfkkdhi9sl3r4s00', {});
+        };
+    
+    
+        var request
+          , user
+          , info;
+  
+        before(function(done) {
+          chai.passport.use(strategy)
+            .success(function(u, i) {
+              user = u;
+              info = i;
+              done();
+            })
+            .req(function(req) {
+              request = req;
+              req.query = {};
+              req.query['oauth_token'] = 'hh5s93j4hdidpola';
+              req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            })
+            .authenticate();
+        });
+  
+        it('should supply user', function() {
+          expect(user).to.be.an.object;
+          expect(user.id).to.equal('1234');
+        });
+
+        it('should supply info with state', function() {
+          expect(info).to.be.an.object;
+          expect(Object.keys(info)).to.have.length(2);
+          expect(info.message).to.equal('Hello');
+          expect(info.state).to.be.an.object;
+          expect(info.state.returnTo).to.equal('http://www.example.com/');
+        });
+    
+        it('should load request token from custom store', function() {
+          expect(request.customStoreGetCalled).to.equal(1);
+        });
+        
+        it('should remove request token from custom store', function() {
+          expect(request.customStoreDestroyCalled).to.equal(1);
+        });
+      }); // that was approved with info
+      
+    });
+    
+  }); // with custom request token store that accepts meta argument and supplies state
+  
+  
   describe('with custom request token store that accepts meta argument and errors on destroy', function() {
     function CustomStore() {
     }
