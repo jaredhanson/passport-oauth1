@@ -36,7 +36,7 @@ list so other people can find it.
 The OAuth authentication strategy authenticates users using a third-party
 account and OAuth tokens.  The provider's OAuth endpoints, as well as the
 consumer key and secret, are specified as options.  The strategy requires a
-`verify` callback, which receives a token and profile, and calls `done`
+`verify` callback, which receives a token and profile, and calls `cb`
 providing a user.
 
     passport.use(new OAuth1Strategy({
@@ -48,9 +48,9 @@ providing a user.
         callbackURL: "http://127.0.0.1:3000/auth/example/callback",
         signatureMethod: "RSA-SHA1"
       },
-      function(token, tokenSecret, profile, done) {
+      function(token, tokenSecret, profile, cb) {
         User.findOrCreate({ exampleId: profile.id }, function (err, user) {
-          return done(err, user);
+          return cb(err, user);
         });
       }
     ));
@@ -77,19 +77,46 @@ application:
 
 - [passport-oauth2](https://github.com/jaredhanson/passport-oauth2) — OAuth 2.0 authentication strategy
 - [passport-http-oauth](https://github.com/jaredhanson/passport-http-oauth) — OAuth authentication strategy for APIs
-- [OAuthorize](https://github.com/jaredhanson/oauthorize) — OAuth service provider toolkit
+- [oauthorize](https://github.com/jaredhanson/oauthorize) — OAuth service provider toolkit
 
-## Tests
+## Contributing
 
-    $ npm install
-    $ npm test
+#### Tests
 
-## Credits
+The test suite is located in the `test/` directory.  All new features are
+expected to have corresponding test cases.  Ensure that the complete test suite
+passes by executing:
 
-  - [Jared Hanson](http://github.com/jaredhanson)
+```bash
+$ make test
+```
+
+#### Coverage
+
+All new feature development is expected to have test coverage.  Patches that
+increse test coverage are happily accepted.  Coverage reports can be viewed by
+executing:
+
+```bash
+$ make test-cov
+$ make view-cov
+```
+
+## Support
+
+#### Funding
+
+This software is provided to you as open source, free of charge.  The time and
+effort to develop and maintain this project is dedicated by [@jaredhanson](https://github.com/jaredhanson).
+If you (or your employer) benefit from this project, please consider a financial
+contribution.  Your contribution helps continue the efforts that produce this
+and other open source software.
+
+Funds are accepted via [PayPal](https://paypal.me/jaredhanson), [Venmo](https://venmo.com/jaredhanson),
+and [other](http://jaredhanson.net/pay) methods.  Any amount is appreciated.
 
 ## License
 
 [The MIT License](http://opensource.org/licenses/MIT)
 
-Copyright (c) 2011-2015 Jared Hanson <[http://jaredhanson.net/](http://jaredhanson.net/)>
+Copyright (c) 2011-2016 Jared Hanson <[http://jaredhanson.net/](http://jaredhanson.net/)>
