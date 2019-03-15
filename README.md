@@ -1,11 +1,5 @@
 # passport-oauth1
 
-[![Build](https://img.shields.io/travis/jaredhanson/passport-oauth1.svg)](https://travis-ci.org/jaredhanson/passport-oauth1)
-[![Coverage](https://img.shields.io/coveralls/jaredhanson/passport-oauth1.svg)](https://coveralls.io/r/jaredhanson/passport-oauth1)
-[![Quality](https://img.shields.io/codeclimate/github/jaredhanson/passport-oauth1.svg?label=quality)](https://codeclimate.com/github/jaredhanson/passport-oauth1)
-[![Dependencies](https://img.shields.io/david/jaredhanson/passport-oauth1.svg)](https://david-dm.org/jaredhanson/passport-oauth1)
-
-
 General-purpose OAuth 1.0 authentication strategy for [Passport](http://passportjs.org/).
 
 This module lets you authenticate using OAuth in your Node.js applications.
@@ -24,6 +18,11 @@ Developers who need to implement authentication against an OAuth provider that
 is not already supported are encouraged to sub-class this strategy.  If you
 choose to open source the new provider-specific strategy, please add it to the
 list so other people can find it.
+
+[![npm](https://img.shields.io/npm/v/passport-oauth1.svg)](https://www.npmjs.com/package/passport-oauth1)
+[![build](https://img.shields.io/travis/jaredhanson/passport-oauth1.svg)](https://travis-ci.org/jaredhanson/passport-oauth1)
+[![coverage](https://img.shields.io/coveralls/jaredhanson/passport-oauth1.svg)](https://coveralls.io/github/jaredhanson/passport-oauth1)
+[...](https://github.com/jaredhanson/passport-oauth1/wiki/Status)
 
 ## Install
 
