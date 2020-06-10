@@ -19,6 +19,16 @@ is not already supported are encouraged to sub-class this strategy.  If you
 choose to open source the new provider-specific strategy, please add it to the
 list so other people can find it.
 
+---
+
+<p align="center">
+  <sup>Advertisement</sup>
+  <br>
+  <a href="https://click.linksynergy.com/link?id=D*o7yui4/NM&offerid=507388.380582&type=2&murl=https%3A%2F%2Fwww.udemy.com%2Fcourse%2Flearn-oauth-2%2F&u1=5I2riUEiNIRjPjdjxj6X4exznbT92nLNQKnhFoggiN">Learn OAuth 2.0 - Get started as an API Security Expert</a><br>Just imagine what could happen to YOUR professional career if you had skills in OAuth > 8500 satisfied students
+</p>
+
+---
+
 [![npm](https://img.shields.io/npm/v/passport-oauth1.svg)](https://www.npmjs.com/package/passport-oauth1)
 [![build](https://img.shields.io/travis/jaredhanson/passport-oauth1.svg)](https://travis-ci.org/jaredhanson/passport-oauth1)
 [![coverage](https://img.shields.io/coveralls/jaredhanson/passport-oauth1.svg)](https://coveralls.io/github/jaredhanson/passport-oauth1)
