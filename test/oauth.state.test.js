@@ -275,6 +275,93 @@ describe('OAuthStrategy', function() {
       });
     }); // that was approved with state
     
+    describe('that errors due to lack of session support in app', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret',
+        store: true
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(new Error('OAuth#getOAuthAccessToken should not be called'));
+      };
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('OAuth authentication requires session support. Did you forget to use express-session middleware?');
+      });
+    }); // that errors due to lack of session support in app
+    
+    describe('that errors due to request token not being found in session', function() {
+      var strategy = new OAuthStrategy({
+        requestTokenURL: 'https://www.example.com/oauth/request_token',
+        accessTokenURL: 'https://www.example.com/oauth/access_token',
+        userAuthorizationURL: 'https://www.example.com/oauth/authorize',
+        consumerKey: 'ABC123',
+        consumerSecret: 'secret',
+        store: true
+      }, function(token, tokenSecret, profile, done) {
+        return done(new Error('verify callback should not be called'));
+      });
+    
+      strategy._oauth.getOAuthAccessToken = function(token, tokenSecret, verifier, callback) {
+        return callback(new Error('OAuth#getOAuthAccessToken should not be called'));
+      };
+      
+      
+      var request
+        , err;
+
+      before(function(done) {
+        chai.passport.use(strategy)
+          .error(function(e) {
+            err = e;
+            done();
+          })
+          .req(function(req) {
+            request = req;
+            req.query = {};
+            req.query['oauth_token'] = 'hh5s93j4hdidpola';
+            req.query['oauth_verifier'] = 'hfdp7dh39dks9884';
+            req.session = {};
+          })
+          .authenticate();
+      });
+
+      it('should error', function() {
+        expect(err).to.be.an.instanceof(Error);
+        expect(err.message).to.equal('Failed to find request token in session');
+      });
+    
+      it('should leave session unmodified', function() {
+        expect(request.session['oauth']).to.be.undefined;
+      });
+    }); // that errors due to request token not being found in session
+    
   });
   
 });
