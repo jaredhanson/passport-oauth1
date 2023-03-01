@@ -15,3 +15,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 a request token store capable of storing application-level state.
 - Support for `state` object passed as option to `authenticate`, which will be
 persisted in the session by request token store.
+
+[Unreleased]: https://github.com/jaredhanson/passport-oauth1/compare/v1.2.0...HEAD
